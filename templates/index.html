@@ -1,14 +1,29 @@
-<!-- index.html -->
 <!DOCTYPE html>
+<!--
+================================================================================
+SIMULADOR DE PIPELINE RISC CON FORWARDING - INTERFAZ WEB
+================================================================================
+Autor: numbasan-san.
+Fecha: 07/04/2026.
+Descripción: Interfaz gráfica para el simulador de pipeline RISC de 5 etapas.
+             Permite ingresar instrucciones assembly, configurar registros,
+             visualizar la evolución ciclo a ciclo y exportar resultados.
+================================================================================
+-->
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Pipeline RISC - Forwarding</title>
+    <!-- Hoja de estilos principal -->
     <link rel="stylesheet" href="{{ url_for('static', filename='stylo.css') }}">
 </head>
 <body>
     <div class="container">
+        <!-- =================================================================
+             CABECERA DE LA PÁGINA
+             ================================================================= -->
         <header>
             <div class="header-content">
                 <h1>🔄 Simulador de Pipeline RISC de 5 Etapas</h1>
@@ -17,11 +32,18 @@
             </div>
         </header>
 
+        <!-- =================================================================
+             CONTENIDO PRINCIPAL (2 columnas)
+             ================================================================= -->
         <div class="main-content">
-            <!-- Panel de control -->
+            
+            <!-- =============================================================
+                 PANEL IZQUIERDO - CONFIGURACIÓN
+                 ============================================================= -->
             <div class="control-panel">
                 <h2>📝 Configuración</h2>
                 
+                <!-- Área de texto para instrucciones assembly -->
                 <div class="form-group">
                     <label>Instrucciones (una por línea):</label>
                     <textarea id="instructions" rows="6" placeholder="ADD R1, R2, R3
@@ -32,12 +54,14 @@ ADD R6, R1, R4"></textarea>
                     </div>
                 </div>
 
+                <!-- Campo para registros iniciales -->
                 <div class="form-group">
                     <label>Registros iniciales (opcional):</label>
                     <input type="text" id="registers" placeholder="R2=10, R3=5, R5=2">
                     <div class="hint">💡 Formato: R2=10, R3=5, R5=2</div>
                 </div>
 
+                <!-- Checkbox para activar/desactivar forwarding -->
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="enableForwarding" checked>
@@ -45,6 +69,7 @@ ADD R6, R1, R4"></textarea>
                     </label>
                 </div>
 
+                <!-- Botones de acción -->
                 <div class="button-group">
                     <button id="simulateBtn" class="btn-primary">▶ Ejecutar Simulación</button>
                     <button id="loadExample1" class="btn-secondary">📋 Ejemplo 1: Dependencia simple</button>
@@ -53,10 +78,15 @@ ADD R6, R1, R4"></textarea>
                 </div>
             </div>
 
-            <!-- Panel de resultados -->
+            <!-- =============================================================
+                 PANEL DERECHO - RESULTADOS (inicialmente oculto)
+                 ============================================================= -->
             <div class="results-panel" id="resultsPanel" style="display: none;">
                 <h2>📊 Resultados de la Simulación</h2>
                 
+                <!-- =========================================================
+                     TARJETAS DE ESTADÍSTICAS (4 métricas principales)
+                     ========================================================= -->
                 <div class="stats">
                     <div class="stat-card">
                         <div class="stat-value" id="totalCycles">0</div>
@@ -80,18 +110,38 @@ ADD R6, R1, R4"></textarea>
                     </div>
                 </div>
 
+                <!-- Nota de rendimiento (explicación del resultado) -->
                 <div class="performance-note" id="performanceNote" style="display: none;">
                     <strong>📈 Nota de rendimiento:</strong>
                     <span id="performanceText"></span>
                 </div>
 
+                <!-- =========================================================
+                     VISUALIZACIÓN DE REGISTROS FINALES
+                     ========================================================= -->
                 <div class="registers-view">
                     <h3>💾 Registros Finales (R0-R15)</h3>
                     <div id="registersGrid" class="registers-grid"></div>
                 </div>
 
+                <!-- =========================================================
+                     VISUALIZACIÓN DEL PIPELINE CICLO A CICLO
+                     ========================================================= -->
                 <div class="pipeline-view">
-                    <h3>🔄 Evolución del Pipeline por Ciclo</h3>
+                    <div class="pipeline-header">
+                        <h3>🔄 Evolución del Pipeline por Ciclo</h3>
+                        <!-- Botones de historial movidos aquí (junto al título) -->
+                        <div class="pipeline-buttons">
+                            <button id="toggleHistory" class="btn-history" title="Mostrar/Ocultar tabla histórica">
+                                📊 Historial
+                            </button>
+                            <button id="exportHistory" class="btn-history" title="Exportar historial a CSV">
+                                💾 Exportar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Controles de navegación ciclo a ciclo -->
                     <div class="timeline-controls">
                         <button id="prevCycle" class="btn-small">◀ Anterior</button>
                         <span id="currentCycleLabel">Ciclo 1</span>
@@ -99,14 +149,47 @@ ADD R6, R1, R4"></textarea>
                         <button id="playAnimation" class="btn-small">▶ Reproducir</button>
                         <button id="resetAnimation" class="btn-small">🔄 Reiniciar</button>
                     </div>
+                    
+                    <!-- Diagrama del pipeline (5 etapas) -->
                     <div id="pipelineDiagram" class="pipeline-diagram"></div>
+                    
+                    <!-- Información adicional del ciclo (stall/forwarding) -->
                     <div id="cycleInfo" class="cycle-info"></div>
+                </div>
+
+                <!-- =========================================================
+                     TABLA HISTÓRICA DEL PIPELINE (inicialmente oculta)
+                     ========================================================= -->
+                <div class="history-view" id="historyView" style="display: none;">
+                    <h3>📜 Historial del Pipeline (Evolución ciclo a ciclo)</h3>
+                    <div class="history-table-container">
+                        <div class="table-wrapper">
+                            <table id="pipelineHistoryTable" class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ciclo</th>
+                                        <th>FI (Fetch)</th>
+                                        <th>DI (Decode)</th>
+                                        <th>EX (Execute)</th>
+                                        <th>MEM (Memory)</th>
+                                        <th>WB (WriteBack)</th>
+                                        <th>Evento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <!-- El contenido se llena dinámicamente con JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal del Manual de Instrucciones -->
+    <!-- =================================================================
+         MODAL DEL MANUAL DE INSTRUCCIONES
+         ================================================================= -->
     <div id="manualModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -114,12 +197,14 @@ ADD R6, R1, R4"></textarea>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <!-- Contenido del manual -->
+                
+                <!-- Sección 1: Introducción -->
                 <div class="manual-section">
                     <h3>🎯 ¿Qué es este simulador?</h3>
                     <p>Este simulador muestra cómo funciona el <strong>mecanismo de forwarding</strong> en un pipeline RISC de 5 etapas (FI, DI, EX, MEM, WB). El forwarding permite resolver riesgos de datos (RAW hazards) sin necesidad de insertar burbujas (stalls), mejorando el rendimiento del procesador.</p>
                 </div>
 
+                <!-- Sección 2: Formato de instrucciones -->
                 <div class="manual-section">
                     <h3>📝 Formato de Instrucciones</h3>
                     <div class="instruction-table">
@@ -156,6 +241,7 @@ ADD R6, R1, R4"></textarea>
                     </div>
                 </div>
 
+                <!-- Sección 3: Configuración inicial -->
                 <div class="manual-section">
                     <h3>⚙️ Configuración Inicial</h3>
                     <ul>
@@ -165,6 +251,7 @@ ADD R6, R1, R4"></textarea>
                     </ul>
                 </div>
 
+                <!-- Sección 4: Ejemplos precargados -->
                 <div class="manual-section">
                     <h3>🎮 Ejemplos Precargados</h3>
                     <div class="example-box">
@@ -184,6 +271,7 @@ ADD R6, R1, R4"></textarea>
                     </div>
                 </div>
 
+                <!-- Sección 5: Interpretación visual -->
                 <div class="manual-section">
                     <h3>🎨 Interpretación Visual</h3>
                     <div class="legend">
@@ -202,15 +290,18 @@ ADD R6, R1, R4"></textarea>
                     </div>
                 </div>
 
+                <!-- Sección 6: Leyenda de estadísticas -->
                 <div class="manual-section">
                     <h3>📊 Leyenda de Estadísticas</h3>
                     <ul>
                         <li><strong>Ciclos Totales:</strong> Número total de ciclos para ejecutar todas las instrucciones.</li>
                         <li><strong>Stalls / Burbujas:</strong> Ciclos donde el pipeline se detuvo (menos es mejor).</li>
                         <li><strong>Eventos de Forwarding:</strong> Veces que se adelantó un dato (solo con forwarding activado).</li>
+                        <li><strong>Eficiencia:</strong> Porcentaje de ciclos útiles vs ciclos totales.</li>
                     </ul>
                 </div>
 
+                <!-- Sección 7: Consejos para probar -->
                 <div class="manual-section">
                     <h3>💡 Consejos para Probar</h3>
                     <ul>
@@ -218,9 +309,11 @@ ADD R6, R1, R4"></textarea>
                         <li>✅ Observa cómo el forwarding evita burbujas en dependencias ADD→SUB.</li>
                         <li>✅ Nota que LW siempre necesita 1 stall (limitación física).</li>
                         <li>✅ Usa la navegación ciclo a ciclo para ver el avance del pipeline.</li>
+                        <li>✅ Exporta el historial a CSV para analizarlo en Excel.</li>
                     </ul>
                 </div>
 
+                <!-- Sección 8: Conceptos técnicos -->
                 <div class="manual-section">
                     <h3>🔬 Conceptos Técnicos</h3>
                     <p><strong>Pipeline de 5 etapas:</strong></p>
@@ -241,6 +334,7 @@ ADD R6, R1, R4"></textarea>
         </div>
     </div>
 
+    <!-- Archivo JavaScript principal -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

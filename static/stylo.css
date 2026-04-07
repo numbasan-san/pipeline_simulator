@@ -1,32 +1,56 @@
-/*  stylo.css */
+/**
+ * ============================================================================
+ * SIMULADOR DE PIPELINE RISC CON FORWARDING - ESTILOS CSS
+ * ============================================================================
+ * Autor: numbasan-san.
+ * Fecha: 07/04/2026.
+ * Descripción: Hoja de estilos principal para la interfaz web del simulador.
+ *              Incluye diseño responsive, animaciones, modal, tabla histórica
+ *              y estilos visuales para el pipeline.
+ * ============================================================================
+ */
+
+/* ============================================================================
+   RESET Y ESTILOS BASE
+   ============================================================================ */
 
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    box-sizing: border-box;  /* Incluye padding y border en el ancho total */
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Gradiente morado de fondo */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
 }
+
+/* ============================================================================
+   CONTENEDOR PRINCIPAL
+   ============================================================================ */
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
     background: white;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);  /* Sombra prominente */
     overflow: hidden;
 }
+
+/* ============================================================================
+   CABECERA
+   ============================================================================ */
 
 header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 30px;
     text-align: center;
+    position: relative;  /* Para posicionar el botón manual */
 }
 
 header h1 {
@@ -34,12 +58,46 @@ header h1 {
     margin-bottom: 10px;
 }
 
+/* Botón del manual de instrucciones (posición absoluta) */
+.btn-manual {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-manual:hover {
+    background: white;
+    color: #667eea;
+    transform: scale(1.05);
+}
+
+.header-content {
+    position: relative;
+}
+
+/* ============================================================================
+   CONTENIDO PRINCIPAL (2 columnas: configuración + resultados)
+   ============================================================================ */
+
 .main-content {
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 400px 1fr;  /* Columna izquierda fija, derecha flexible */
     gap: 20px;
     padding: 20px;
 }
+
+/* ============================================================================
+   PANEL DE CONFIGURACIÓN (COLUMNA IZQUIERDA)
+   ============================================================================ */
 
 .control-panel {
     background: #f8f9fa;
@@ -53,6 +111,7 @@ header h1 {
     color: #333;
 }
 
+/* Grupos de formulario */
 .form-group {
     margin-bottom: 20px;
 }
@@ -64,6 +123,7 @@ header h1 {
     color: #555;
 }
 
+/* Área de texto para instrucciones assembly */
 textarea {
     width: 100%;
     padding: 10px;
@@ -71,9 +131,10 @@ textarea {
     border-radius: 8px;
     font-family: 'Courier New', monospace;
     font-size: 14px;
-    resize: vertical;
+    resize: vertical;  /* Permite redimensionar solo verticalmente */
 }
 
+/* Campo de texto para registros iniciales */
 input[type="text"] {
     width: 100%;
     padding: 10px;
@@ -82,12 +143,14 @@ input[type="text"] {
     font-family: 'Courier New', monospace;
 }
 
+/* Texto de ayuda/hint */
 .hint {
     font-size: 12px;
     color: #999;
     margin-top: 5px;
 }
 
+/* Checkbox de forwarding */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -98,12 +161,14 @@ input[type="text"] {
     margin-right: 10px;
 }
 
+/* Grupo de botones (vertical) */
 .button-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
+/* Botones principales */
 .btn-primary, .btn-secondary {
     padding: 12px;
     border: none;
@@ -129,6 +194,10 @@ input[type="text"] {
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
+/* ============================================================================
+   PANEL DE RESULTADOS (COLUMNA DERECHA)
+   ============================================================================ */
+
 .results-panel {
     background: #f8f9fa;
     padding: 20px;
@@ -141,9 +210,13 @@ input[type="text"] {
     color: #333;
 }
 
+/* ============================================================================
+   TARJETAS DE ESTADÍSTICAS
+   ============================================================================ */
+
 .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);  /* 4 columnas para 4 métricas */
     gap: 15px;
     margin-bottom: 30px;
 }
@@ -154,6 +227,12 @@ input[type="text"] {
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
 }
 
 .stat-value {
@@ -167,9 +246,38 @@ input[type="text"] {
     margin-top: 5px;
 }
 
+.stat-hint {
+    font-size: 10px;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* ============================================================================
+   NOTA DE RENDIMIENTO
+   ============================================================================ */
+
+.performance-note {
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2196f3;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ============================================================================
+   VISUALIZACIÓN DE REGISTROS
+   ============================================================================ */
+
+.registers-view h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
 .registers-grid {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(8, 1fr);  /* 8 columnas para 16 registros */
     gap: 10px;
     margin-bottom: 30px;
 }
@@ -180,6 +288,12 @@ input[type="text"] {
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
 }
 
 .register-name {
@@ -194,12 +308,54 @@ input[type="text"] {
     margin-top: 5px;
 }
 
+/* ============================================================================
+   VISUALIZACIÓN DEL PIPELINE (DIAGRAMA CICLO A CICLO)
+   ============================================================================ */
+
 .pipeline-view {
     background: white;
     padding: 20px;
     border-radius: 10px;
 }
 
+/* Header del pipeline con botones de historial */
+.pipeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pipeline-header h3 {
+    margin: 0;
+}
+
+/* Botones de historial (junto al título) */
+.pipeline-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-history {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-history:hover {
+    background: #5a67d8;
+    transform: translateY(-1px);
+}
+
+/* Controles de navegación (anterior/siguiente/reproducir) */
 .timeline-controls {
     display: flex;
     align-items: center;
@@ -215,6 +371,7 @@ input[type="text"] {
     border-radius: 5px;
     cursor: pointer;
     font-size: 12px;
+    transition: background 0.2s;
 }
 
 .btn-small:hover {
@@ -226,6 +383,7 @@ input[type="text"] {
     font-size: 14px;
 }
 
+/* Diagrama del pipeline (5 etapas) */
 .pipeline-diagram {
     background: #f8f9fa;
     padding: 20px;
@@ -239,6 +397,7 @@ input[type="text"] {
     margin-bottom: 10px;
 }
 
+/* Cada etapa del pipeline */
 .stage {
     flex: 1;
     text-align: center;
@@ -247,13 +406,21 @@ input[type="text"] {
     background: white;
     border-radius: 8px;
     border: 2px solid #ddd;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.stage:hover {
+    transform: scale(1.02);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+/* Burbuja (stall) - color rojo */
 .stage.bubble {
     background: #ffe0e0;
     border-color: #ff6b6b;
 }
 
+/* Forwarding activado - color verde */
 .stage.forwarding {
     background: #d4edda;
     border-color: #28a745;
@@ -278,6 +445,7 @@ input[type="text"] {
     margin-top: 5px;
 }
 
+/* Información adicional del ciclo */
 .cycle-info {
     margin-top: 20px;
     padding: 15px;
@@ -296,37 +464,92 @@ input[type="text"] {
     border-left-color: #28a745;
 }
 
-/* Estilos del Manual */
-.btn-manual {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 2px solid white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+/* ============================================================================
+   TABLA HISTÓRICA DEL PIPELINE
+   ============================================================================ */
 
-.btn-manual:hover {
+.history-view {
+    margin-top: 30px;
     background: white;
-    color: #667eea;
-    transform: scale(1.05);
+    padding: 20px;
+    border-radius: 10px;
 }
 
-header {
-    position: relative;
+.history-view h3 {
+    margin-bottom: 15px;
+    color: #333;
 }
 
-.header-content {
-    position: relative;
+/* Contenedor de la tabla con scroll */
+.table-wrapper {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
 }
 
-/* Modal */
+/* Tabla histórica */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+/* Cabecera fija (sticky) */
+.history-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-weight: bold;
+}
+
+.history-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    font-family: 'Courier New', monospace;
+}
+
+/* Hover en filas */
+.history-table tr:hover {
+    background: #f8f9fa;
+}
+
+/* Celdas con estilo según evento */
+.history-table td.stall-cell {
+    background: #ffe0e0;
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.history-table td.forwarding-cell {
+    background: #d4edda;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.history-table td.normal-cell {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+
+.history-table .bubble {
+    color: #ff6b6b;
+    font-style: italic;
+}
+
+.history-table .instruction {
+    font-weight: bold;
+    color: #333;
+}
+
+/* ============================================================================
+   MODAL DEL MANUAL DE INSTRUCCIONES
+   ============================================================================ */
+
 .modal {
     display: none;
     position: fixed;
@@ -407,6 +630,10 @@ header {
     text-align: right;
 }
 
+/* ============================================================================
+   CONTENIDO DEL MANUAL
+   ============================================================================ */
+
 .manual-section {
     margin-bottom: 30px;
     border-bottom: 1px solid #e0e0e0;
@@ -439,6 +666,7 @@ header {
     margin-bottom: 8px;
 }
 
+/* Tabla de instrucciones */
 .instruction-table {
     background: #f8f9fa;
     border-radius: 10px;
@@ -474,6 +702,7 @@ header {
     display: inline-block;
 }
 
+/* Ejemplos precargados */
 .example-box {
     background: #f8f9fa;
     padding: 15px;
@@ -503,6 +732,7 @@ header {
     font-size: 14px;
 }
 
+/* Leyenda de colores */
 .legend {
     display: flex;
     gap: 20px;
@@ -522,42 +752,9 @@ header {
     border-radius: 5px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .instruction-row {
-        grid-template-columns: 1fr;
-        gap: 5px;
-        padding: 15px;
-    }
-    
-    .instruction-row.header {
-        display: none;
-    }
-    
-    .instruction-row div:before {
-        content: attr(data-label);
-        font-weight: bold;
-        display: inline-block;
-        width: 100px;
-    }
-    
-    .modal-content {
-        width: 95%;
-        margin: 20px auto;
-    }
-    
-    .btn-manual {
-        position: relative;
-        top: 0;
-        right: 0;
-        margin-top: 15px;
-        display: inline-block;
-    }
-    
-    .header-content {
-        text-align: center;
-    }
-}
+/* ============================================================================
+   SPINNER DE CARGA
+   ============================================================================ */
 
 .spinner {
     border: 4px solid #f3f3f3;
@@ -574,46 +771,61 @@ header {
     100% { transform: rotate(360deg); }
 }
 
-/* Transiciones suaves */
-.stat-card, .register-card, .stage {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+/* ============================================================================
+   SCROLLBAR PERSONALIZADO
+   ============================================================================ */
 
-.stat-card:hover, .register-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-}
-
-.stage:hover {
-    transform: scale(1.02);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
-/* Scrollbar personalizado */
 .modal-body::-webkit-scrollbar,
-.results-panel::-webkit-scrollbar {
+.results-panel::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
 }
 
 .modal-body::-webkit-scrollbar-track,
-.results-panel::-webkit-scrollbar-track {
+.results-panel::-webkit-scrollbar-track,
+.table-wrapper::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
 }
 
 .modal-body::-webkit-scrollbar-thumb,
-.results-panel::-webkit-scrollbar-thumb {
+.results-panel::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb {
     background: #667eea;
     border-radius: 10px;
 }
 
 .modal-body::-webkit-scrollbar-thumb:hover,
-.results-panel::-webkit-scrollbar-thumb:hover {
+.results-panel::-webkit-scrollbar-thumb:hover,
+.table-wrapper::-webkit-scrollbar-thumb:hover {
     background: #5a67d8;
 }
 
-/* Mejoras responsive adicionales */
+/* ============================================================================
+   MEDIA QUERIES - DISEÑO RESPONSIVE
+   ============================================================================ */
+
 @media (max-width: 768px) {
+    /* Layout general */
+    .main-content {
+        grid-template-columns: 1fr;  /* Una sola columna en móvil */
+    }
+    
+    /* Cabecera */
+    .btn-manual {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-top: 15px;
+        display: inline-block;
+    }
+    
+    .header-content {
+        text-align: center;
+    }
+    
+    /* Estadísticas - 2 columnas en móvil */
     .stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
@@ -627,11 +839,13 @@ header {
         font-size: 1.5em;
     }
     
+    /* Registros - 4 columnas en móvil */
     .registers-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 8px;
     }
     
+    /* Pipeline - vertical en móvil */
     .pipeline-stage {
         flex-direction: column;
         gap: 8px;
@@ -642,29 +856,70 @@ header {
         padding: 10px;
     }
     
+    /* Controles de navegación */
     .timeline-controls {
         flex-wrap: wrap;
         justify-content: center;
     }
     
-    .main-content {
+    /* Header del pipeline */
+    .pipeline-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .pipeline-buttons {
+        width: 100%;
+    }
+    
+    .btn-history {
+        flex: 1;
+        text-align: center;
+    }
+    
+    /* Modal */
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    /* Tabla de instrucciones en móvil */
+    .instruction-row {
         grid-template-columns: 1fr;
+        gap: 5px;
+        padding: 15px;
+    }
+    
+    .instruction-row.header {
+        display: none;
+    }
+    
+    .instruction-row div:before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: inline-block;
+        width: 100px;
     }
 }
 
-/* Agregar al final */
-.stat-hint {
-    font-size: 10px;
-    color: #999;
-    margin-top: 5px;
+/* Estilo para la tarjeta de contador de registros */
+.register-card.register-count {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
 }
 
-.performance-note {
-    background: #e3f2fd;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border-left: 4px solid #2196f3;
-    font-size: 14px;
-    line-height: 1.5;
+.register-card.register-count .register-name {
+    color: white;
+    opacity: 0.9;
+}
+
+.register-card.register-count .register-value {
+    color: white;
+    font-size: 1.5em;
+}
+
+.register-hint {
+    font-size: 9px;
+    opacity: 0.8;
+    margin-top: 4px;
 }

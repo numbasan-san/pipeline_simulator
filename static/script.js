@@ -1,7 +1,24 @@
-// script.js
+/**
+ * ============================================================================
+ * SIMULADOR DE PIPELINE RISC CON FORWARDING - JAVASCRIPT FRONTEND
+ * ============================================================================
+ * Autor: numbasan-san.
+ * Fecha: 07/04/2026.
+ * Descripción: Controlador principal de la interfaz web.
+ * ============================================================================
+ */
+
+// ============================================================================
+// VARIABLES GLOBALES
+// ============================================================================
+
 let simulationData = null;
 let currentCycleIndex = 0;
 let animationInterval = null;
+
+// ============================================================================
+// INICIALIZACIÓN
+// ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     const simulateBtn = document.getElementById('simulateBtn');
@@ -24,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nextCycle) nextCycle.addEventListener('click', () => navigateCycle(1));
     if (playAnimation) playAnimation.addEventListener('click', toggleAnimation);
     
-    // Manual modal handlers
     if (manualBtn) {
         manualBtn.addEventListener('click', () => {
             if (modal) {
@@ -34,20 +50,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-    
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) closeModal();
-    });
-    
-    function closeModal() {
+    if (closeBtn) closeBtn.addEventListener('click', () => {
         if (modal) {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-    }
+    });
+    
+    if (closeModalBtn) closeModalBtn.addEventListener('click', () => {
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+    
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
 });
+
+// ============================================================================
+// CARGA DE EJEMPLOS
+// ============================================================================
 
 function loadExample(exampleNum) {
     const instructionsTextarea = document.getElementById('instructions');
@@ -70,12 +97,14 @@ ADD R6, R1, R4`;
         registersInput.value = 'R2=10, R3=5, R5=2';
     }
     
-    // Auto-ejecutar después de cargar el ejemplo
     setTimeout(() => runSimulation(), 100);
 }
 
+// ============================================================================
+// SIMULACIÓN PRINCIPAL
+// ============================================================================
+
 async function runSimulation() {
-    // Detener animación si está corriendo
     if (animationInterval) {
         clearInterval(animationInterval);
         animationInterval = null;
@@ -87,7 +116,6 @@ async function runSimulation() {
     const registers = document.getElementById('registers')?.value || '';
     const enableForwarding = document.getElementById('enableForwarding')?.checked || true;
     
-    // Mostrar loading
     const resultsPanel = document.getElementById('resultsPanel');
     if (!resultsPanel) return;
     
@@ -97,14 +125,8 @@ async function runSimulation() {
     try {
         const response = await fetch('/simulate', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                instructions: instructions,
-                registers: registers,
-                enable_forwarding: enableForwarding
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instructions, registers, enable_forwarding: enableForwarding })
         });
         
         const data = await response.json();
@@ -112,14 +134,8 @@ async function runSimulation() {
         if (data.success) {
             simulationData = data;
             currentCycleIndex = 0;
-            
-            // Reconstruir el panel de resultados con todas las estadísticas
             rebuildResultsPanel();
-            
-            // Mostrar primer ciclo
             displayCycle(0);
-            
-            // Scroll al panel de resultados
             resultsPanel.scrollIntoView({ behavior: 'smooth' });
         } else {
             resultsPanel.innerHTML = `<div style="text-align:center; padding:50px; color:red;">❌ Error: ${data.error}</div>`;
@@ -129,15 +145,20 @@ async function runSimulation() {
     }
 }
 
+// ============================================================================
+// CONSTRUCCIÓN DEL PANEL DE RESULTADOS
+// ============================================================================
+
 function rebuildResultsPanel() {
     const panel = document.getElementById('resultsPanel');
     if (!panel || !simulationData) return;
     
-    // Calcular métricas adicionales
-    const instructionsCount = simulationData.instructions_count || simulationData.cycles?.length || 0;
+    const instructionsCount = simulationData.instructions_count || 0;
     const idealCycles = simulationData.ideal_cycles || (instructionsCount + 4);
     const efficiency = simulationData.efficiency || ((idealCycles / simulationData.total_cycles) * 100);
     const penalty = simulationData.total_cycles - idealCycles;
+    const usedRegisters = simulationData.used_registers || {};
+    const usedRegistersList = simulationData.used_registers_list || [];
     
     panel.innerHTML = `
         <h2>📊 Resultados de la Simulación</h2>
@@ -175,12 +196,18 @@ function rebuildResultsPanel() {
         </div>
 
         <div class="registers-view">
-            <h3>💾 Registros Finales (R0-R15)</h3>
+            <h3>💾 Registros Utilizados (${usedRegistersList.length} registros)</h3>
             <div id="registersGrid" class="registers-grid"></div>
         </div>
 
         <div class="pipeline-view">
-            <h3>🔄 Evolución del Pipeline por Ciclo</h3>
+            <div class="pipeline-header">
+                <h3>🔄 Evolución del Pipeline por Ciclo</h3>
+                <div class="pipeline-buttons">
+                    <button id="toggleHistoryBtn" class="btn-history">📊 Historial</button>
+                    <button id="exportHistoryBtn" class="btn-history">💾 Exportar</button>
+                </div>
+            </div>
             <div class="timeline-controls">
                 <button id="prevCycle" class="btn-small">◀ Anterior</button>
                 <span id="currentCycleLabel">Ciclo 1 de ${simulationData.total_cycles}</span>
@@ -191,42 +218,91 @@ function rebuildResultsPanel() {
             <div id="pipelineDiagram" class="pipeline-diagram"></div>
             <div id="cycleInfo" class="cycle-info"></div>
         </div>
+        
+        <div id="historyView" class="history-view" style="display: none;">
+            <h3>📜 Historial del Pipeline</h3>
+            <div class="history-table-container">
+                <div class="table-wrapper">
+                    <table id="pipelineHistoryTable" class="history-table">
+                        <thead><tr><th>Ciclo</th><th>FI</th><th>DI</th><th>EX</th><th>MEM</th><th>WB</th><th>Evento</th></tr></thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     `;
     
-    // Reasignar eventos
-    const prevBtn = document.getElementById('prevCycle');
-    const nextBtn = document.getElementById('nextCycle');
-    const playBtn = document.getElementById('playAnimation');
-    const resetBtn = document.getElementById('resetView');
+    // Eventos
+    document.getElementById('prevCycle')?.addEventListener('click', () => navigateCycle(-1));
+    document.getElementById('nextCycle')?.addEventListener('click', () => navigateCycle(1));
+    document.getElementById('playAnimation')?.addEventListener('click', toggleAnimation);
+    document.getElementById('resetView')?.addEventListener('click', () => displayCycle(0));
     
-    if (prevBtn) prevBtn.addEventListener('click', () => navigateCycle(-1));
-    if (nextBtn) nextBtn.addEventListener('click', () => navigateCycle(1));
-    if (playBtn) playBtn.addEventListener('click', toggleAnimation);
-    if (resetBtn) resetBtn.addEventListener('click', () => displayCycle(0));
+    document.getElementById('toggleHistoryBtn')?.addEventListener('click', () => {
+        const historyView = document.getElementById('historyView');
+        if (historyView) {
+            const isHidden = historyView.style.display === 'none';
+            historyView.style.display = isHidden ? 'block' : 'none';
+            document.getElementById('toggleHistoryBtn').textContent = isHidden ? '📊 Ocultar' : '📊 Historial';
+            if (isHidden) buildHistoryTable();
+        }
+    });
     
-    // Mostrar registros finales
-    displayRegisters(simulationData.final_registers || []);
+    document.getElementById('exportHistoryBtn')?.addEventListener('click', exportHistoryToCSV);
+    
+    displayRegisters(simulationData.final_registers || [], usedRegisters, usedRegistersList);
 }
 
-function displayRegisters(registers) {
+// ============================================================================
+// VISUALIZACIÓN DE REGISTROS
+// ============================================================================
+
+function displayRegisters(registers, usedRegistersDict, usedRegistersList) {
     const container = document.getElementById('registersGrid');
     if (!container) return;
     container.innerHTML = '';
     
-    const numRegisters = Math.min(registers.length, 16);
-    for (let i = 0; i < numRegisters; i++) {
-        const regDiv = document.createElement('div');
-        regDiv.className = 'register-card';
-        regDiv.innerHTML = `
-            <div class="register-name">R${i}</div>
-            <div class="register-value">${registers[i] !== undefined ? registers[i] : 0}</div>
-        `;
-        container.appendChild(regDiv);
+    if (usedRegistersList && usedRegistersList.length > 0) {
+        // Mostrar solo los registros que fueron usados (SIN tarjeta de contador al final)
+        for (const regNum of usedRegistersList) {
+            const regValue = usedRegistersDict[regNum] || 0;
+            const regDiv = document.createElement('div');
+            regDiv.className = 'register-card';
+            regDiv.innerHTML = `
+                <div class="register-name">R${regNum}</div>
+                <div class="register-value">${regValue}</div>
+            `;
+            container.appendChild(regDiv);
+        }
+        // NOTA: Ya NO se agrega la tarjeta "📊 Total" al final
+        
+    } else {
+        // Fallback: mostrar registros que tienen valor != 0 (hasta R15)
+        const maxReg = Math.min(registers.length, 16);
+        for (let i = 0; i < maxReg; i++) {
+            const val = registers[i] !== undefined ? registers[i] : 0;
+            if (val !== 0 || i === 0) {
+                const regDiv = document.createElement('div');
+                regDiv.className = 'register-card';
+                if (val === 0 && i !== 0) {
+                    regDiv.style.opacity = '0.5';
+                }
+                regDiv.innerHTML = `
+                    <div class="register-name">R${i}</div>
+                    <div class="register-value">${val}</div>
+                `;
+                container.appendChild(regDiv);
+            }
+        }
     }
 }
 
+// ============================================================================
+// VISUALIZACIÓN DEL PIPELINE
+// ============================================================================
+
 function displayCycle(index) {
-    if (!simulationData || !simulationData.cycles || index >= simulationData.cycles.length) return;
+    if (!simulationData?.cycles || index >= simulationData.cycles.length) return;
     
     const cycle = simulationData.cycles[index];
     currentCycleIndex = index;
@@ -234,16 +310,15 @@ function displayCycle(index) {
     const cycleLabel = document.getElementById('currentCycleLabel');
     if (cycleLabel) cycleLabel.textContent = `Ciclo ${cycle.cycle} de ${simulationData.total_cycles}`;
     
-    // Mostrar diagrama del pipeline (usar estado POST)
     const diagramContainer = document.getElementById('pipelineDiagram');
     if (!diagramContainer) return;
     
     const stages = ['IF', 'ID', 'EX', 'MEM', 'WB'];
-    const stageNames = {'IF': '🔍 FI', 'ID': '📖 DI', 'EX': '⚙️ EX', 'MEM': '💾 MEM', 'WB': '✍️ WB'};
+    const stageNames = { 'IF': '🔍 FI', 'ID': '📖 DI', 'EX': '⚙️ EX', 'MEM': '💾 MEM', 'WB': '✍️ WB' };
     
     let html = '<div class="pipeline-stage">';
     for (const stage of stages) {
-        const inst = cycle.post ? cycle.post[stage] : null;
+        const inst = cycle.post?.[stage];
         const isBubble = !inst;
         const isForwarding = cycle.forwarding && cycle.forwarding.includes(stage);
         
@@ -252,69 +327,41 @@ function displayCycle(index) {
         
         if (inst) {
             instructionHtml = `${inst.op} R${inst.rd}`;
-            if (inst.result !== undefined && inst.result !== null && inst.result !== 0) {
-                resultHtml = `<div class="stage-result">→ ${inst.result}</div>`;
-            }
+            if (inst.result && inst.result !== 0) resultHtml = `<div class="stage-result">→ ${inst.result}</div>`;
         }
         
-        let bubbleClass = isBubble ? 'bubble' : '';
-        let forwardingClass = isForwarding ? 'forwarding' : '';
-        
-        html += `
-            <div class="stage ${bubbleClass} ${forwardingClass}">
-                <div class="stage-name">${stageNames[stage]}</div>
-                <div class="stage-instruction">${instructionHtml}</div>
-                ${resultHtml}
-            </div>
-        `;
+        html += `<div class="stage ${isBubble ? 'bubble' : ''} ${isForwarding ? 'forwarding' : ''}">
+                    <div class="stage-name">${stageNames[stage]}</div>
+                    <div class="stage-instruction">${instructionHtml}</div>${resultHtml}
+                </div>`;
     }
     html += '</div>';
     diagramContainer.innerHTML = html;
     
-    // Mostrar información del ciclo
     const infoContainer = document.getElementById('cycleInfo');
-    if (!infoContainer) return;
-    
-    let infoHtml = '';
-    
-    if (cycle.stall) {
-        infoHtml = `
-            <div class="cycle-info stall">
-                <strong>⚠️ STALL DETECTADO:</strong> ${cycle.stall_reason || 'Dependencia de datos'}
-                <br>Se inserta una burbuja en la etapa DI. El pipeline se detiene 1 ciclo.
-            </div>
-        `;
-    } else if (cycle.forwarding) {
-        infoHtml = `
-            <div class="cycle-info forwarding">
-                <strong>🔄 FORWARDING ACTIVADO:</strong> ${cycle.forwarding}
-                <br>El dato se pasa directamente desde una etapa posterior, evitando el stall.
-            </div>
-        `;
-    } else {
-        infoHtml = `
-            <div class="cycle-info">
-                <strong>✅ Pipeline normal:</strong> No hay riesgos de datos detectados.
-                <br>Todas las etapas avanzan normalmente.
-            </div>
-        `;
+    if (infoContainer) {
+        if (cycle.stall) {
+            infoContainer.innerHTML = `<div class="cycle-info stall"><strong>⚠️ STALL:</strong> ${cycle.stall_reason}<br>Se inserta una burbuja en DI.</div>`;
+        } else if (cycle.forwarding) {
+            infoContainer.innerHTML = `<div class="cycle-info forwarding"><strong>🔄 FORWARDING:</strong> ${cycle.forwarding}<br>Dato pasado desde etapa posterior.</div>`;
+        } else {
+            infoContainer.innerHTML = `<div class="cycle-info"><strong>✅ Normal:</strong> No hay riesgos de datos.</div>`;
+        }
     }
-    
-    infoContainer.innerHTML = infoHtml;
 }
 
+// ============================================================================
+// NAVEGACIÓN Y ANIMACIÓN
+// ============================================================================
+
 function navigateCycle(delta) {
-    if (!simulationData || !simulationData.cycles) return;
-    
+    if (!simulationData?.cycles) return;
     const newIndex = currentCycleIndex + delta;
-    if (newIndex >= 0 && newIndex < simulationData.cycles.length) {
-        displayCycle(newIndex);
-    }
+    if (newIndex >= 0 && newIndex < simulationData.cycles.length) displayCycle(newIndex);
 }
 
 function toggleAnimation() {
-    if (!simulationData || !simulationData.cycles) return;
-    
+    if (!simulationData?.cycles) return;
     if (animationInterval) {
         clearInterval(animationInterval);
         animationInterval = null;
@@ -340,4 +387,99 @@ function startAnimation() {
             displayCycle(index);
         }
     }, 800);
+}
+
+// ============================================================================
+// TABLA HISTÓRICA
+// ============================================================================
+
+function buildHistoryTable() {
+    if (!simulationData?.cycles) return;
+    const tbody = document.getElementById('historyTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    for (const cycle of simulationData.cycles) {
+        const row = document.createElement('tr');
+        row.appendChild(createCell(cycle.cycle, true));
+        
+        for (const stage of ['IF', 'ID', 'EX', 'MEM', 'WB']) {
+            const inst = cycle.post?.[stage];
+            const cell = document.createElement('td');
+            if (!inst) {
+                cell.innerHTML = '<span class="bubble">💨 ---</span>';
+                cell.classList.add('stall-cell');
+            } else {
+                let resultText = (inst.result && inst.result !== 0) ? `<small> → ${inst.result}</small>` : '';
+                cell.innerHTML = `<span class="instruction">${inst.op} R${inst.rd}</span>${resultText}`;
+                if (cycle.forwarding?.includes(stage)) cell.classList.add('forwarding-cell');
+                else cell.classList.add('normal-cell');
+            }
+            row.appendChild(cell);
+        }
+        
+        const eventCell = document.createElement('td');
+        if (cycle.stall) {
+            eventCell.innerHTML = '⚠️ STALL';
+            eventCell.classList.add('stall-cell');
+        } else if (cycle.forwarding) {
+            eventCell.innerHTML = '🔄 FORWARDING';
+            eventCell.classList.add('forwarding-cell');
+        } else {
+            eventCell.innerHTML = '✅ Normal';
+            eventCell.classList.add('normal-cell');
+        }
+        row.appendChild(eventCell);
+        tbody.appendChild(row);
+    }
+}
+
+function createCell(content, isBold = false) {
+    const cell = document.createElement('td');
+    cell.textContent = content;
+    if (isBold) cell.style.fontWeight = 'bold';
+    return cell;
+}
+
+// ============================================================================
+// EXPORTAR CSV
+// ============================================================================
+
+function exportHistoryToCSV() {
+    if (!simulationData?.cycles) {
+        alert('No hay datos para exportar');
+        return;
+    }
+    
+    const headers = ['Ciclo', 'FI', 'DI', 'EX', 'MEM', 'WB', 'Evento'];
+    const rows = [];
+    
+    for (const cycle of simulationData.cycles) {
+        const row = [cycle.cycle];
+        for (const stage of ['IF', 'ID', 'EX', 'MEM', 'WB']) {
+            const inst = cycle.post?.[stage];
+            if (!inst) {
+                row.push('--- (Burbuja)');
+            } else {
+                let text = `${inst.op} R${inst.rd}`;
+                if (inst.result && inst.result !== 0) text += ` = ${inst.result}`;
+                row.push(text);
+            }
+        }
+        if (cycle.stall) row.push('STALL');
+        else if (cycle.forwarding) row.push('FORWARDING');
+        else row.push('NORMAL');
+        rows.push(row);
+    }
+    
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `pipeline_history_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
