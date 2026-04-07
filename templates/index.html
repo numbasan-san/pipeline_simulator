@@ -1,0 +1,246 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Pipeline RISC - Forwarding</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylo.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🔄 Simulador de Pipeline RISC de 5 Etapas</h1>
+                <p>Visualización del mecanismo de Forwarding para evitar riesgos de datos</p>
+                <button id="manualBtn" class="btn-manual">📖 Manual de Instrucciones</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Panel de control -->
+            <div class="control-panel">
+                <h2>📝 Configuración</h2>
+                
+                <div class="form-group">
+                    <label>Instrucciones (una por línea):</label>
+                    <textarea id="instructions" rows="6" placeholder="ADD R1, R2, R3
+SUB R4, R1, R5
+ADD R6, R1, R4"></textarea>
+                    <div class="hint">
+                        💡 Ejemplos: ADD R1,R2,R3 | SUB R4,R1,R5 | LW R1,0(R2) | SW R3,0(R4)
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Registros iniciales (opcional):</label>
+                    <input type="text" id="registers" placeholder="R2=10, R3=5, R5=2">
+                    <div class="hint">💡 Formato: R2=10, R3=5, R5=2</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="enableForwarding" checked>
+                        ✅ Habilitar Forwarding
+                    </label>
+                </div>
+
+                <div class="button-group">
+                    <button id="simulateBtn" class="btn-primary">▶ Ejecutar Simulación</button>
+                    <button id="loadExample1" class="btn-secondary">📋 Ejemplo 1: Dependencia simple</button>
+                    <button id="loadExample2" class="btn-secondary">📋 Ejemplo 2: Dependencia con LW</button>
+                    <button id="loadExample3" class="btn-secondary">📋 Ejemplo 3: Cadena de dependencias</button>
+                </div>
+            </div>
+
+            <!-- Panel de resultados -->
+            <div class="results-panel" id="resultsPanel" style="display: none;">
+                <h2>📊 Resultados de la Simulación</h2>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalCycles">0</div>
+                        <div class="stat-label">Ciclos Totales</div>
+                        <div class="stat-hint" id="idealCycles">Ideal: 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalStalls">0</div>
+                        <div class="stat-label">Stalls / Burbujas</div>
+                        <div class="stat-hint" id="penalty">Penalización: +0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="forwardingEvents">0</div>
+                        <div class="stat-label">Eventos de Forwarding</div>
+                        <div class="stat-hint" id="stallsAvoided">Stalls evitados: 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="efficiency">0%</div>
+                        <div class="stat-label">Eficiencia del Pipeline</div>
+                        <div class="stat-hint" id="instructionsCount">0 instrucciones</div>
+                    </div>
+                </div>
+
+                <div class="performance-note" id="performanceNote" style="display: none;">
+                    <strong>📈 Nota de rendimiento:</strong>
+                    <span id="performanceText"></span>
+                </div>
+
+                <div class="registers-view">
+                    <h3>💾 Registros Finales (R0-R15)</h3>
+                    <div id="registersGrid" class="registers-grid"></div>
+                </div>
+
+                <div class="pipeline-view">
+                    <h3>🔄 Evolución del Pipeline por Ciclo</h3>
+                    <div class="timeline-controls">
+                        <button id="prevCycle" class="btn-small">◀ Anterior</button>
+                        <span id="currentCycleLabel">Ciclo 1</span>
+                        <button id="nextCycle" class="btn-small">Siguiente ▶</button>
+                        <button id="playAnimation" class="btn-small">▶ Reproducir</button>
+                        <button id="resetAnimation" class="btn-small">🔄 Reiniciar</button>
+                    </div>
+                    <div id="pipelineDiagram" class="pipeline-diagram"></div>
+                    <div id="cycleInfo" class="cycle-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal del Manual de Instrucciones -->
+    <div id="manualModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📖 Manual de Instrucciones</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido del manual -->
+                <div class="manual-section">
+                    <h3>🎯 ¿Qué es este simulador?</h3>
+                    <p>Este simulador muestra cómo funciona el <strong>mecanismo de forwarding</strong> en un pipeline RISC de 5 etapas (FI, DI, EX, MEM, WB). El forwarding permite resolver riesgos de datos (RAW hazards) sin necesidad de insertar burbujas (stalls), mejorando el rendimiento del procesador.</p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>📝 Formato de Instrucciones</h3>
+                    <div class="instruction-table">
+                        <div class="instruction-row header">
+                            <div>Instrucción</div>
+                            <div>Formato</div>
+                            <div>Ejemplo</div>
+                            <div>Qué hace</div>
+                        </div>
+                        <div class="instruction-row">
+                            <div><span class="op-code">ADD</span></div>
+                            <div>ADD Rd, Rs, Rt</div>
+                            <div>ADD R1, R2, R3</div>
+                            <div>R1 = R2 + R3</div>
+                        </div>
+                        <div class="instruction-row">
+                            <div><span class="op-code">SUB</span></div>
+                            <div>SUB Rd, Rs, Rt</div>
+                            <div>SUB R4, R1, R5</div>
+                            <div>R4 = R1 - R5</div>
+                        </div>
+                        <div class="instruction-row">
+                            <div><span class="op-code">LW</span></div>
+                            <div>LW Rd, offset(Rs)</div>
+                            <div>LW R1, 0(R2)</div>
+                            <div>R1 = Mem[R2 + 0]</div>
+                        </div>
+                        <div class="instruction-row">
+                            <div><span class="op-code">SW</span></div>
+                            <div>SW Rt, offset(Rs)</div>
+                            <div>SW R3, 0(R4)</div>
+                            <div>Mem[R4 + 0] = R3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3>⚙️ Configuración Inicial</h3>
+                    <ul>
+                        <li><strong>Instrucciones:</strong> Escribe una instrucción por línea. Se ejecutarán en orden.</li>
+                        <li><strong>Registros iniciales:</strong> Opcional. Formato: <code>R2=10, R3=5, R5=2</code></li>
+                        <li><strong>Habilitar Forwarding:</strong> Activa/desactiva el mecanismo de adelanto de datos.</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🎮 Ejemplos Precargados</h3>
+                    <div class="example-box">
+                        <div class="example-title">Ejemplo 1: Dependencia simple</div>
+                        <code>ADD R1, R2, R3<br>SUB R4, R1, R5</code>
+                        <p>✅ El forwarding envía R1 desde EX a EX, evitando stall.</p>
+                    </div>
+                    <div class="example-box">
+                        <div class="example-title">Ejemplo 2: Dependencia con LW</div>
+                        <code>LW R1, 0(R2)<br>ADD R3, R1, R4</code>
+                        <p>⚠️ LW necesita 1 stall incluso con forwarding (dato en MEM).</p>
+                    </div>
+                    <div class="example-box">
+                        <div class="example-title">Ejemplo 3: Cadena de dependencias</div>
+                        <code>ADD R1, R2, R3<br>SUB R4, R1, R5<br>ADD R6, R1, R4</code>
+                        <p>🔄 Múltiples forwarding events para resolver todas las dependencias.</p>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🎨 Interpretación Visual</h3>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: white; border: 2px solid #ddd;"></div>
+                            <span>Etapa normal sin instrucción</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ffe0e0; border-color: #ff6b6b;"></div>
+                            <span><strong>Burbuja (Stall)</strong> - Pipeline detenido por dependencia</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #d4edda; border-color: #28a745;"></div>
+                            <span><strong>Forwarding activado</strong> - Datos adelantados desde etapa posterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3>📊 Leyenda de Estadísticas</h3>
+                    <ul>
+                        <li><strong>Ciclos Totales:</strong> Número total de ciclos para ejecutar todas las instrucciones.</li>
+                        <li><strong>Stalls / Burbujas:</strong> Ciclos donde el pipeline se detuvo (menos es mejor).</li>
+                        <li><strong>Eventos de Forwarding:</strong> Veces que se adelantó un dato (solo con forwarding activado).</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>💡 Consejos para Probar</h3>
+                    <ul>
+                        <li>✅ Prueba el mismo programa CON y SIN forwarding para ver la diferencia.</li>
+                        <li>✅ Observa cómo el forwarding evita burbujas en dependencias ADD→SUB.</li>
+                        <li>✅ Nota que LW siempre necesita 1 stall (limitación física).</li>
+                        <li>✅ Usa la navegación ciclo a ciclo para ver el avance del pipeline.</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🔬 Conceptos Técnicos</h3>
+                    <p><strong>Pipeline de 5 etapas:</strong></p>
+                    <ul>
+                        <li><strong>FI:</strong> Instruction Fetch - Trae la instrucción de memoria</li>
+                        <li><strong>DI:</strong> Instruction Decode - Decodifica y lee registros</li>
+                        <li><strong>EX:</strong> Execute - Ejecuta operación en ALU</li>
+                        <li><strong>MEM:</strong> Memory - Accede a memoria (para LW/SW)</li>
+                        <li><strong>WB:</strong> Write Back - Escribe resultado en registro</li>
+                    </ul>
+                    <p><strong>RAW Hazard (Read After Write):</strong> Ocurre cuando una instrucción necesita leer un registro que aún no ha sido escrito por la instrucción anterior.</p>
+                    <p><strong>Forwarding (Adelanto de datos):</strong> Técnica que conecta la salida de etapas posteriores (EX/MEM, MEM/WB) directamente a la entrada de la ALU, evitando stalls innecesarios.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeModalBtn" class="btn-primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
