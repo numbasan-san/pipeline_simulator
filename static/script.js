@@ -97,6 +97,9 @@ ADD R6, R1, R4`;
         registersInput.value = 'R2=10, R3=5, R5=2';
     }
     
+    // El checkbox NO se modifica al cargar ejemplos
+    // (mantiene el estado que el usuario eligió)
+    
     setTimeout(() => runSimulation(), 100);
 }
 
@@ -114,7 +117,10 @@ async function runSimulation() {
     
     const instructions = document.getElementById('instructions')?.value || '';
     const registers = document.getElementById('registers')?.value || '';
-    const enableForwarding = document.getElementById('enableForwarding')?.checked || true;
+    const enableForwardingCheckbox = document.getElementById('enableForwarding');
+    const enableForwarding = enableForwardingCheckbox ? enableForwardingCheckbox.checked : true;
+    
+    console.log("🔘 Checkbox marcado?:", enableForwarding);
     
     const resultsPanel = document.getElementById('resultsPanel');
     if (!resultsPanel) return;
@@ -126,13 +132,19 @@ async function runSimulation() {
         const response = await fetch('/simulate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ instructions, registers, enable_forwarding: enableForwarding })
+            body: JSON.stringify({ 
+                instructions: instructions, 
+                registers: registers, 
+                enable_forwarding: enableForwarding
+            })
         });
         
         const data = await response.json();
         
         if (data.success) {
             simulationData = data;
+            // 🔑 Guardar el modo usado para el título
+            simulationData.mode_forwarding = enableForwarding;
             currentCycleIndex = 0;
             rebuildResultsPanel();
             displayCycle(0);
@@ -160,8 +172,13 @@ function rebuildResultsPanel() {
     const usedRegisters = simulationData.used_registers || {};
     const usedRegistersList = simulationData.used_registers_list || [];
     
+    // 🔑 DETECTAR SI HAY FORWARDING (basado en eventos de forwarding)
+    // Si hay eventos de forwarding (>0) o si se recibió el estado desde el backend
+    const hasForwarding = simulationData.forwarding_events > 0;
+    const forwardingText = hasForwarding ? "✅ Con Forwarding" : "❌ Sin Forwarding";
+    
     panel.innerHTML = `
-        <h2>📊 Resultados de la Simulación</h2>
+        <h2>📊 Resultados de la Simulación - ${forwardingText}</h2>
         
         <div class="stats">
             <div class="stat-card">

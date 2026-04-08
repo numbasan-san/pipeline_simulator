@@ -11,7 +11,8 @@ Descripción: Servidor Flask que recibe instrucciones assembly, ejecuta la
 
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from pipeline_core import Pipeline
+from pipeline_forwarding import Pipeline
+from pipeline_no_forwarding import PipelineNoForwarding
 import re
 import sys
 
@@ -49,21 +50,14 @@ def parse_instruction(inst_str):
     # Ignorar líneas que son comentarios (empiezan con #)
     if inst_str.startswith('#'):
         return None
-        
-    # Convertir a mayúsculas para estandarizar
     inst_str = inst_str.strip().upper()
-    
-    # Limpiar espacios en blanco alrededor de comas (formato más flexible)
     inst_str = re.sub(r'\s*,\s*', ',', inst_str)
-    
-    # Patrones regex para cada tipo de instrucción
     patterns = {
         'ADD': r'ADD\s+R(\d+),R(\d+),R(\d+)',
         'SUB': r'SUB\s+R(\d+),R(\d+),R(\d+)',
         'LW': r'LW\s+R(\d+),(\d+)\(R(\d+)\)',
         'SW': r'SW\s+R(\d+),(\d+)\(R(\d+)\)'
     }
-    
     for op, pattern in patterns.items():
         match = re.match(pattern, inst_str)
         if match:
@@ -79,7 +73,6 @@ def parse_instruction(inst_str):
                     return {'op': op, 'rd': 0, 'rs': rs, 'rt': rt, 'offset': offset}
             except:
                 return None
-    
     return None
 
 
@@ -116,10 +109,17 @@ def simulate():
             return jsonify({'error': 'No se encontraron instrucciones válidas'})
         
         print(f"Ejecutando simulación con {len(instructions)} instrucciones...")
+        print(f"📥 Modo: {'FORWARDING ACTIVADO' if enable_forwarding else 'SIN FORWARDING'}")
         
-        # Crear y configurar pipeline
-        print(f"📥 Recibida petición: enable_forwarding={enable_forwarding}")
-        pipeline = Pipeline(enable_forwarding=enable_forwarding)
+        # ================================================================
+        # SELECCIONAR EL PIPELINE CORRECTO SEGÚN LA OPCIÓN
+        # ================================================================
+        if enable_forwarding:
+            print("✅ Usando pipeline CON forwarding")
+            pipeline = Pipeline(enable_forwarding=True)
+        else:
+            print("❌ Usando pipeline SIN forwarding (versión paralela)")
+            pipeline = PipelineNoForwarding()
         
         for inst in instructions:
             pipeline.add_instruction(
@@ -146,8 +146,7 @@ def simulate():
         # Ejecutar simulación
         result = pipeline.run()
         
-        print(f"Simulación completada: {result['total_cycles']} ciclos")
-        print(f"Registros usados: {result.get('used_registers_list', [])}")
+        print(f"Simulación completada: {result['total_cycles']} ciclos, {result['stalls']} stalls")
         
         # Formatear resultados
         formatted_cycles = []
@@ -160,7 +159,7 @@ def simulate():
                 'cycle': cycle['cycle'],
                 'stall': cycle['stall'],
                 'stall_reason': cycle['stall_reason'],
-                'forwarding': cycle['forwarding'],
+                'forwarding': cycle.get('forwarding'),
                 'pre': {
                     'IF': cycle['pre_state']['IF'],
                     'ID': cycle['pre_state']['ID'],
@@ -198,7 +197,6 @@ def simulate():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Error interno: {str(e)}'})
-
 
 if __name__ == '__main__':
     sys.setrecursionlimit(10000)

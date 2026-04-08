@@ -923,3 +923,12 @@ input[type="text"] {
     opacity: 0.8;
     margin-top: 4px;
 }
+
+/* Estilo para el título según el modo */
+.results-panel h2 .with-forwarding {
+    color: #28a745;
+}
+
+.results-panel h2 .without-forwarding {
+    color: #dc3545;
+}
