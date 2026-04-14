@@ -2,8 +2,6 @@
  * ============================================================================
  * SIMULADOR DE PIPELINE RISC CON FORWARDING - JAVASCRIPT FRONTEND
  * ============================================================================
- * Autor: numbasan-san.
- * Fecha: 07/04/2026.
  * Descripción: Controlador principal de la interfaz web.
  * ============================================================================
  */
@@ -32,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('manualModal');
     const closeBtn = document.querySelector('.close');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    
+    const creditsBtn = document.getElementById('creditsBtn');
     if (simulateBtn) simulateBtn.addEventListener('click', runSimulation);
     if (loadExample1) loadExample1.addEventListener('click', () => loadExample(1));
     if (loadExample2) loadExample2.addEventListener('click', () => loadExample(2));
@@ -40,6 +38,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (prevCycle) prevCycle.addEventListener('click', () => navigateCycle(-1));
     if (nextCycle) nextCycle.addEventListener('click', () => navigateCycle(1));
     if (playAnimation) playAnimation.addEventListener('click', toggleAnimation);
+    
+    if (creditsBtn) {
+        creditsBtn.addEventListener('click', () => {
+            window.open('/credits', '_blank');  // Abre en nueva pestaña
+            // o usa: window.location.href = '/credits'; para abrir en la misma
+        });
+    }
     
     if (manualBtn) {
         manualBtn.addEventListener('click', () => {

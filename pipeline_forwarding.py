@@ -1,8 +1,6 @@
 """
 PIPELINE CON FORWARDING - PIPELINE RISC DE 5 ETAPAS CON FORWARDING
 ================================================================================
-Autor: numbasan-san.
-Fecha: 07/04/2026.
 Descripción: Implementación del pipeline de 5 etapas (FI, DI, EX, MEM, WB)
              con mecanismo de forwarding para resolver riesgos de datos (RAW).
              Soporta instrucciones: ADD, SUB, LW, SW.

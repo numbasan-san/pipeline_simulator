@@ -2,8 +2,6 @@
  * ============================================================================
  * SIMULADOR DE PIPELINE RISC CON FORWARDING - ESTILOS CSS
  * ============================================================================
- * Autor: numbasan-san.
- * Fecha: 07/04/2026.
  * Descripción: Hoja de estilos principal para la interfaz web del simulador.
  *              Incluye diseño responsive, animaciones, modal, tabla histórica
  *              y estilos visuales para el pipeline.
@@ -17,12 +15,11 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;  /* Incluye padding y border en el ancho total */
+    box-sizing: border-box;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Gradiente morado de fondo */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
@@ -37,7 +34,7 @@ body {
     margin: 0 auto;
     background: white;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);  /* Sombra prominente */
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     overflow: hidden;
 }
 
@@ -48,25 +45,44 @@ body {
 header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 30px;
-    text-align: center;
-    position: relative;  /* Para posicionar el botón manual */
+    padding: 20px 30px;
 }
 
-header h1 {
-    font-size: 2em;
-    margin-bottom: 10px;
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-/* Botón del manual de instrucciones (posición absoluta) */
+.header-title {
+    flex: 1;
+}
+
+.header-title h1 {
+    font-size: 1.8em;
+    margin-bottom: 5px;
+}
+
+.header-title p {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+/* Contenedor de botones a la derecha */
+.header-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Botón del manual de instrucciones */
 .btn-manual {
-    position: absolute;
-    top: 20px;
-    right: 30px;
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border: 2px solid white;
-    padding: 10px 20px;
+    padding: 8px 18px;
     border-radius: 25px;
     font-size: 14px;
     font-weight: bold;
@@ -80,8 +96,23 @@ header h1 {
     transform: scale(1.05);
 }
 
-.header-content {
-    position: relative;
+/* Botón de créditos */
+.btn-credits {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid white;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-credits:hover {
+    background: white;
+    color: #764ba2;
+    transform: scale(1.05);
 }
 
 /* ============================================================================
@@ -90,7 +121,7 @@ header h1 {
 
 .main-content {
     display: grid;
-    grid-template-columns: 400px 1fr;  /* Columna izquierda fija, derecha flexible */
+    grid-template-columns: 400px 1fr;
     gap: 20px;
     padding: 20px;
 }
@@ -111,7 +142,6 @@ header h1 {
     color: #333;
 }
 
-/* Grupos de formulario */
 .form-group {
     margin-bottom: 20px;
 }
@@ -123,7 +153,6 @@ header h1 {
     color: #555;
 }
 
-/* Área de texto para instrucciones assembly */
 textarea {
     width: 100%;
     padding: 10px;
@@ -131,10 +160,9 @@ textarea {
     border-radius: 8px;
     font-family: 'Courier New', monospace;
     font-size: 14px;
-    resize: vertical;  /* Permite redimensionar solo verticalmente */
+    resize: vertical;
 }
 
-/* Campo de texto para registros iniciales */
 input[type="text"] {
     width: 100%;
     padding: 10px;
@@ -143,14 +171,12 @@ input[type="text"] {
     font-family: 'Courier New', monospace;
 }
 
-/* Texto de ayuda/hint */
 .hint {
     font-size: 12px;
     color: #999;
     margin-top: 5px;
 }
 
-/* Checkbox de forwarding */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -161,14 +187,12 @@ input[type="text"] {
     margin-right: 10px;
 }
 
-/* Grupo de botones (vertical) */
 .button-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-/* Botones principales */
 .btn-primary, .btn-secondary {
     padding: 12px;
     border: none;
@@ -210,13 +234,22 @@ input[type="text"] {
     color: #333;
 }
 
+/* Estilo para el título según el modo */
+.results-panel h2 .with-forwarding {
+    color: #28a745;
+}
+
+.results-panel h2 .without-forwarding {
+    color: #dc3545;
+}
+
 /* ============================================================================
    TARJETAS DE ESTADÍSTICAS
    ============================================================================ */
 
 .stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);  /* 4 columnas para 4 métricas */
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
     margin-bottom: 30px;
 }
@@ -277,7 +310,7 @@ input[type="text"] {
 
 .registers-grid {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);  /* 8 columnas para 16 registros */
+    grid-template-columns: repeat(8, 1fr);
     gap: 10px;
     margin-bottom: 30px;
 }
@@ -308,6 +341,28 @@ input[type="text"] {
     margin-top: 5px;
 }
 
+/* Tarjeta de contador de registros */
+.register-card.register-count {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.register-card.register-count .register-name {
+    color: white;
+    opacity: 0.9;
+}
+
+.register-card.register-count .register-value {
+    color: white;
+    font-size: 1.5em;
+}
+
+.register-hint {
+    font-size: 9px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
 /* ============================================================================
    VISUALIZACIÓN DEL PIPELINE (DIAGRAMA CICLO A CICLO)
    ============================================================================ */
@@ -318,7 +373,6 @@ input[type="text"] {
     border-radius: 10px;
 }
 
-/* Header del pipeline con botones de historial */
 .pipeline-header {
     display: flex;
     justify-content: space-between;
@@ -332,7 +386,6 @@ input[type="text"] {
     margin: 0;
 }
 
-/* Botones de historial (junto al título) */
 .pipeline-buttons {
     display: flex;
     gap: 8px;
@@ -355,7 +408,6 @@ input[type="text"] {
     transform: translateY(-1px);
 }
 
-/* Controles de navegación (anterior/siguiente/reproducir) */
 .timeline-controls {
     display: flex;
     align-items: center;
@@ -383,7 +435,6 @@ input[type="text"] {
     font-size: 14px;
 }
 
-/* Diagrama del pipeline (5 etapas) */
 .pipeline-diagram {
     background: #f8f9fa;
     padding: 20px;
@@ -397,7 +448,6 @@ input[type="text"] {
     margin-bottom: 10px;
 }
 
-/* Cada etapa del pipeline */
 .stage {
     flex: 1;
     text-align: center;
@@ -414,13 +464,11 @@ input[type="text"] {
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-/* Burbuja (stall) - color rojo */
 .stage.bubble {
     background: #ffe0e0;
     border-color: #ff6b6b;
 }
 
-/* Forwarding activado - color verde */
 .stage.forwarding {
     background: #d4edda;
     border-color: #28a745;
@@ -445,7 +493,6 @@ input[type="text"] {
     margin-top: 5px;
 }
 
-/* Información adicional del ciclo */
 .cycle-info {
     margin-top: 20px;
     padding: 15px;
@@ -480,7 +527,6 @@ input[type="text"] {
     color: #333;
 }
 
-/* Contenedor de la tabla con scroll */
 .table-wrapper {
     overflow-x: auto;
     max-height: 400px;
@@ -489,14 +535,12 @@ input[type="text"] {
     border-radius: 8px;
 }
 
-/* Tabla histórica */
 .history-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
 }
 
-/* Cabecera fija (sticky) */
 .history-table th {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -513,12 +557,10 @@ input[type="text"] {
     font-family: 'Courier New', monospace;
 }
 
-/* Hover en filas */
 .history-table tr:hover {
     background: #f8f9fa;
 }
 
-/* Celdas con estilo según evento */
 .history-table td.stall-cell {
     background: #ffe0e0;
     color: #dc3545;
@@ -666,7 +708,6 @@ input[type="text"] {
     margin-bottom: 8px;
 }
 
-/* Tabla de instrucciones */
 .instruction-table {
     background: #f8f9fa;
     border-radius: 10px;
@@ -702,7 +743,6 @@ input[type="text"] {
     display: inline-block;
 }
 
-/* Ejemplos precargados */
 .example-box {
     background: #f8f9fa;
     padding: 15px;
@@ -732,7 +772,6 @@ input[type="text"] {
     font-size: 14px;
 }
 
-/* Leyenda de colores */
 .legend {
     display: flex;
     gap: 20px;
@@ -809,15 +848,28 @@ input[type="text"] {
 @media (max-width: 768px) {
     /* Layout general */
     .main-content {
-        grid-template-columns: 1fr;  /* Una sola columna en móvil */
+        grid-template-columns: 1fr;
     }
     
     /* Cabecera */
-    .btn-manual {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-title h1 {
+        font-size: 1.4em;
+    }
+    
+    .header-buttons {
+        justify-content: center;
+    }
+    
+    .btn-manual, .btn-credits {
         position: relative;
         top: 0;
         right: 0;
-        margin-top: 15px;
+        margin: 5px;
         display: inline-block;
     }
     
@@ -825,7 +877,7 @@ input[type="text"] {
         text-align: center;
     }
     
-    /* Estadísticas - 2 columnas en móvil */
+    /* Estadísticas */
     .stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
@@ -839,13 +891,13 @@ input[type="text"] {
         font-size: 1.5em;
     }
     
-    /* Registros - 4 columnas en móvil */
+    /* Registros */
     .registers-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 8px;
     }
     
-    /* Pipeline - vertical en móvil */
+    /* Pipeline */
     .pipeline-stage {
         flex-direction: column;
         gap: 8px;
@@ -856,13 +908,12 @@ input[type="text"] {
         padding: 10px;
     }
     
-    /* Controles de navegación */
+    /* Controles */
     .timeline-controls {
         flex-wrap: wrap;
         justify-content: center;
     }
     
-    /* Header del pipeline */
     .pipeline-header {
         flex-direction: column;
         align-items: flex-start;
@@ -883,7 +934,7 @@ input[type="text"] {
         margin: 20px auto;
     }
     
-    /* Tabla de instrucciones en móvil */
+    /* Tabla de instrucciones */
     .instruction-row {
         grid-template-columns: 1fr;
         gap: 5px;
@@ -900,35 +951,4 @@ input[type="text"] {
         display: inline-block;
         width: 100px;
     }
-}
-
-/* Estilo para la tarjeta de contador de registros */
-.register-card.register-count {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.register-card.register-count .register-name {
-    color: white;
-    opacity: 0.9;
-}
-
-.register-card.register-count .register-value {
-    color: white;
-    font-size: 1.5em;
-}
-
-.register-hint {
-    font-size: 9px;
-    opacity: 0.8;
-    margin-top: 4px;
-}
-
-/* Estilo para el título según el modo */
-.results-panel h2 .with-forwarding {
-    color: #28a745;
-}
-
-.results-panel h2 .without-forwarding {
-    color: #dc3545;
 }

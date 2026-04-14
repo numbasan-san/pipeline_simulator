@@ -1,8 +1,6 @@
 """
 APLICACIÓN WEB - SIMULADOR DE PIPELINE RISC CON FORWARDING
 ================================================================================
-Autor: numbasan-san.
-Fecha: 07/04/2026.
 Descripción: Servidor Flask que recibe instrucciones assembly, ejecuta la 
              simulación del pipeline de 5 etapas y devuelve los resultados 
              en formato JSON para visualización en la interfaz web.
@@ -10,7 +8,6 @@ Descripción: Servidor Flask que recibe instrucciones assembly, ejecuta la
 """
 
 from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
 from pipeline_forwarding import Pipeline
 from pipeline_no_forwarding import PipelineNoForwarding
 import re
@@ -21,7 +18,6 @@ import sys
 # ============================================================================
 
 app = Flask(__name__)
-CORS(app)
 
 # Aumentar límite de tamaño de petición (soporta programas grandes de hasta 16MB)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -197,6 +193,135 @@ def simulate():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Error interno: {str(e)}'})
+
+@app.route('/credits')
+def credits():
+    """Muestra los créditos del equipo de desarrollo."""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Créditos - Simulador de Pipeline RISC</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+            }
+            .credits-card {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                max-width: 800px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            h1 {
+                color: #667eea;
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px;
+                text-align: left;
+            }
+            td {
+                padding: 12px;
+                border-bottom: 1px solid #e0e0e0;
+                vertical-align: top;
+            }
+            .role {
+                font-weight: bold;
+                color: #667eea;
+                width: 30%;
+            }
+            .contribution {
+                color: #555;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #e0e0e0;
+                color: #999;
+            }
+            .back-btn {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 10px 20px;
+                background: #667eea;
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                transition: transform 0.2s;
+            }
+            .back-btn:hover {
+                transform: translateY(-2px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="credits-card">
+            <h1>📋 Créditos del Proyecto</h1>
+            <h2 style="color:#333; margin-bottom:20px;">Simulador de Pipeline RISC con Forwarding</h2>
+            
+            <table>
+                <thead>
+                    <tr><th>Integrante</th><th>Contribución</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="role">ADALBERTO BANKS MENDOZA</td>
+                        <td class="contribution">
+                            • Implementación del pipeline core (5 etapas: FI, DI, EX, MEM, WB)<br>
+                            • Desarrollo del mecanismo de forwarding
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role">EDDY MANUEL PEÑA ORTEGA</td>
+                        <td class="contribution">
+                            • Desarrollo de la interfaz web (HTML/CSS/JS)<br>
+                            • Visualización ciclo a ciclo del pipeline<br>
+                            • Tabla histórica y exportación a CSV
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role">HENRY ALEJANDRO CONCEPCION ALMANZAR</td>
+                        <td class="contribution">
+                            • Lógica de detección de hazards y stalls<br>
+                            • Manejo de stalls por instrucciones LW<br>
+                            • Optimización del forwarding
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role">MANUEL ALBERTO BERNABEL MERINO</td>
+                        <td class="contribution">
+                            • Desarrollo de casos de prueba<br>
+                            • Generador de programas masivos<br>
+                            • Documentación y depuración
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Proyecto de Simulación de Pipeline RISC de 5 etapas</p>
+                <p>Mecanismo de Forwarding para evitar riesgos de datos</p>
+                <a href="/" class="back-btn">← Volver al Simulador</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 if __name__ == '__main__':
     sys.setrecursionlimit(10000)
